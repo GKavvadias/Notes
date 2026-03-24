@@ -16,12 +16,14 @@ A web application where authenticated users can create, view, edit, delete, and 
   - Horizontal rules
 - Public sharing of notes via a public URL (toggle on/off)
 
-### Tech
+### Tech Stack
 
 - Next.js (App Router) + Bun runtime
 - TypeScript
 - TailwindCSS
 - SQLite via Bun's SQLite client with raw SQL
+
+---
 
 ## 2. Architecture
 
@@ -49,6 +51,8 @@ A web application where authenticated users can create, view, edit, delete, and 
 - Raw SQL queries executed via Bun's SQLite client
 - A small helper module for DB access
 
+---
+
 ## 3. Functional Requirements
 
 ### 3.1 Authentication
@@ -66,7 +70,7 @@ Unauthenticated users:
 ### 3.2 Notes Management (Authenticated)
 
 **Create a new note:**
-- Default title: "Untitled note"
+- Default title: `"Untitled note"`
 - Default empty TipTap document
 
 **View a list of own notes:**
@@ -99,24 +103,19 @@ Users can toggle note "public sharing":
 - Shows title and content in read-only mode
 - No editing or owner information necessary
 
+---
+
 ## 4. Non-Functional Requirements
 
-**Performance**
-- Notes list & note view should load under ~300 ms for typical DB sizes
+| Category | Requirement |
+|----------|-------------|
+| **Performance** | Notes list & note view should load under ~300 ms for typical DB sizes |
+| **Security** | All note operations are scoped to authenticated user's `user_id`; public notes are read-only with no leaked private data |
+| **Reliability** | Graceful handling of DB errors |
+| **Maintainability** | Type-safe APIs and DB types; modularized DB and auth helpers |
+| **UX** | Simple, minimal UI with keyboard-friendly editor |
 
-**Security**
-- All note operations are scoped to authenticated user's `user_id`
-- Public notes are read-only; no leaked private data in API responses
-
-**Reliability**
-- Graceful handling of DB errors
-
-**Maintainability**
-- Type-safe APIs and DB types
-- Modularized DB and auth helpers
-
-**UX**
-- Simple, minimal UI with keyboard-friendly editor
+---
 
 ## 5. Data Model & Database Schema (SQLite)
 
@@ -124,9 +123,19 @@ Users can toggle note "public sharing":
 
 #### better-auth Core Tables
 
-better-auth manages its own tables for authentication. The following tables are required by better-auth:
+better-auth manages its own tables for authentication. **Do not create these manually** — use the better-auth CLI to generate or run migrations:
 
-**user**
+```bash
+# Generate SQL migration file
+npx auth@latest generate
+
+# Or apply migrations directly
+npx auth@latest migrate
+```
+
+The following tables are created and managed by better-auth:
+
+##### `user`
 
 ```sql
 CREATE TABLE user (
@@ -140,17 +149,17 @@ CREATE TABLE user (
 );
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | TEXT | Unique identifier for each user (primary key) |
-| name | TEXT | User's chosen display name |
-| email | TEXT | User's email address for communication and login |
-| emailVerified | INTEGER | Whether the user's email is verified (0 or 1) |
-| image | TEXT | User's image URL (optional) |
-| createdAt | TEXT | Timestamp of when the user account was created |
-| updatedAt | TEXT | Timestamp of the last update to the user's information |
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | TEXT | Primary key |
+| `name` | TEXT | User's display name |
+| `email` | TEXT | Unique; used for login |
+| `emailVerified` | INTEGER | `0` or `1` |
+| `image` | TEXT | Avatar URL (optional) |
+| `createdAt` | TEXT | ISO timestamp |
+| `updatedAt` | TEXT | ISO timestamp |
 
-**session**
+##### `session`
 
 ```sql
 CREATE TABLE session (
@@ -166,18 +175,18 @@ CREATE TABLE session (
 );
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | TEXT | Unique identifier for each session (primary key) |
-| userId | TEXT | The ID of the user (foreign key) |
-| token | TEXT | The unique session token |
-| expiresAt | TEXT | The time when the session expires |
-| ipAddress | TEXT | The IP address of the device (optional) |
-| userAgent | TEXT | The user agent information of the device (optional) |
-| createdAt | TEXT | Timestamp of when the session was created |
-| updatedAt | TEXT | Timestamp of when the session was updated |
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | TEXT | Primary key |
+| `userId` | TEXT | Foreign key → `user.id` |
+| `token` | TEXT | Unique session token |
+| `expiresAt` | TEXT | ISO timestamp |
+| `ipAddress` | TEXT | Optional |
+| `userAgent` | TEXT | Optional |
+| `createdAt` | TEXT | ISO timestamp |
+| `updatedAt` | TEXT | ISO timestamp |
 
-**account**
+##### `account`
 
 ```sql
 CREATE TABLE account (
@@ -198,23 +207,23 @@ CREATE TABLE account (
 );
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | TEXT | Unique identifier for each account (primary key) |
-| userId | TEXT | The ID of the user (foreign key) |
-| accountId | TEXT | The ID of the account as provided by SSO or equal to userId for credential accounts |
-| providerId | TEXT | The ID of the provider (e.g., "credential", "google", "github") |
-| accessToken | TEXT | The access token returned by the provider (optional) |
-| refreshToken | TEXT | The refresh token returned by the provider (optional) |
-| accessTokenExpiresAt | TEXT | The time when the access token expires (optional) |
-| refreshTokenExpiresAt | TEXT | The time when the refresh token expires (optional) |
-| scope | TEXT | The scope of the account returned by the provider (optional) |
-| idToken | TEXT | The ID token returned from the provider (optional) |
-| password | TEXT | The hashed password for email/password authentication (optional) |
-| createdAt | TEXT | Timestamp of when the account was created |
-| updatedAt | TEXT | Timestamp of when the account was updated |
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | TEXT | Primary key |
+| `userId` | TEXT | Foreign key → `user.id` |
+| `accountId` | TEXT | Provider-assigned account ID (or `userId` for credential accounts) |
+| `providerId` | TEXT | e.g. `"credential"`, `"google"` |
+| `accessToken` | TEXT | Optional; returned by OAuth provider |
+| `refreshToken` | TEXT | Optional; returned by OAuth provider |
+| `accessTokenExpiresAt` | TEXT | Optional |
+| `refreshTokenExpiresAt` | TEXT | Optional |
+| `scope` | TEXT | Optional |
+| `idToken` | TEXT | Optional; returned by OAuth provider |
+| `password` | TEXT | Optional; hashed password for credential auth |
+| `createdAt` | TEXT | ISO timestamp |
+| `updatedAt` | TEXT | ISO timestamp |
 
-**verification**
+##### `verification`
 
 ```sql
 CREATE TABLE verification (
@@ -227,16 +236,18 @@ CREATE TABLE verification (
 );
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | TEXT | Unique identifier for each verification (primary key) |
-| identifier | TEXT | The identifier for the verification request |
-| value | TEXT | The value to be verified |
-| expiresAt | TEXT | The time when the verification request expires |
-| createdAt | TEXT | Timestamp of when the verification request was created |
-| updatedAt | TEXT | Timestamp of when the verification request was updated |
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | TEXT | Primary key |
+| `identifier` | TEXT | Identifies the verification request |
+| `value` | TEXT | Value to verify |
+| `expiresAt` | TEXT | ISO timestamp |
+| `createdAt` | TEXT | ISO timestamp |
+| `updatedAt` | TEXT | ISO timestamp |
 
-#### notes
+#### `notes`
+
+This is the application-managed table:
 
 ```sql
 CREATE TABLE notes (
@@ -252,6 +263,17 @@ CREATE TABLE notes (
 );
 ```
 
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | TEXT | Primary key |
+| `user_id` | TEXT | Foreign key → `user.id` |
+| `title` | TEXT | Note title |
+| `content_json` | TEXT | Stringified TipTap JSON document |
+| `is_public` | INTEGER | `0` or `1` |
+| `public_slug` | TEXT | Unique slug for public URL (nullable) |
+| `created_at` | TEXT | ISO timestamp |
+| `updated_at` | TEXT | ISO timestamp |
+
 ### 5.2 Indexes
 
 ```sql
@@ -260,6 +282,8 @@ CREATE INDEX idx_notes_public_slug ON notes(public_slug);
 CREATE INDEX idx_notes_is_public ON notes(is_public);
 ```
 
+---
+
 ## 6. Backend: DB & API Layer
 
 ### 6.1 Database Access Module
@@ -267,25 +291,24 @@ CREATE INDEX idx_notes_is_public ON notes(is_public);
 **File:** `lib/db.ts`
 
 - Initialize Bun SQLite client with DB file (`app.db`)
-- Export helper functions such as:
+- Export helper functions:
   - `getDb()` – returns singleton DB connection
-  - Utility wrappers for:
-    - `query<T>(sql, params?): T[]`
-    - `get<T>(sql, params?): T | undefined`
-    - `run(sql, params?)`
+  - `query<T>(sql, params?): T[]`
+  - `get<T>(sql, params?): T | undefined`
+  - `run(sql, params?)`
 
 ### 6.2 Note Repository Functions
 
 **File:** `lib/notes.ts`
 
-**TypeScript types:**
+**TypeScript type:**
 
 ```typescript
 export type Note = {
   id: string;
   userId: string;
   title: string;
-  contentJson: string; // stringified TipTap doc
+  contentJson: string; // stringified TipTap JSON doc
   isPublic: boolean;
   publicSlug: string | null;
   createdAt: string;
@@ -303,27 +326,30 @@ export type Note = {
 - `setNotePublic(userId: string, noteId: string, isPublic: boolean): Promise<Note | null>`
 - `getNoteByPublicSlug(slug: string): Promise<Note | null>`
 
-Each function enforces `user_id = ?` in SQL where applicable, to avoid cross-user access.
+All functions scoped to `user_id` via SQL `WHERE user_id = ?` to prevent cross-user access.
+
+---
 
 ## 7. API Design (Next.js Route Handlers)
 
-Base path under `/api/notes`.
+Base path: `/api/notes`
 
-### 7.1 Authentication Access
+### 7.1 Authentication
 
-Implement a server helper from better-auth like `getCurrentUser()` or `getSession()`.
+Use better-auth's server helper (e.g., `auth.api.getSession()`) to retrieve the current session.
 
-All `/api/notes` handlers (except public read) must:
-- Check auth
-- Return 401 if not authenticated
+All `/api/notes` handlers must:
+- Validate the session
+- Return `401` if unauthenticated
 
 ### 7.2 Endpoints
 
-#### GET /api/notes
+#### `GET /api/notes`
 
-**Description:** List notes for current user.
+List notes for the current user. Omits `contentJson` for performance.
 
 **Response 200:**
+
 ```json
 [
   {
@@ -335,74 +361,82 @@ All `/api/notes` handlers (except public read) must:
 ]
 ```
 
-Optionally omit `contentJson` for list for performance.
+---
 
-#### POST /api/notes
+#### `POST /api/notes`
 
-**Description:** Create a new note.
+Create a new note.
 
-**Request body (JSON):**
+**Request body:**
+
 ```json
 {
   "title": "Optional title",
-  "contentJson": { "type": "doc", ... }
+  "contentJson": { "type": "doc", "content": [] }
 }
 ```
 
-**Behavior:**
-- Default title = "Untitled note" if missing
-- Default `contentJson` = empty TipTap document if missing
+- Defaults: `title = "Untitled note"`, `contentJson = empty TipTap document`
 
-**Response 201:** created Note (or minimal subset)
+**Response 201:** Created note object.
 
-#### GET /api/notes/:id
+---
 
-**Description:** Get single note owned by current user.
+#### `GET /api/notes/:id`
+
+Get a single note owned by the current user.
 
 **Response:**
-- 200 with full note including `contentJson`
-- 404 if not found or not owned by user
+- `200` with full note including `contentJson`
+- `404` if not found or not owned by user
 
-#### PUT /api/notes/:id
+---
 
-**Description:** Update note title/content.
+#### `PUT /api/notes/:id`
+
+Update note title and/or content.
 
 **Request body:**
+
 ```json
 {
   "title": "New title",
-  "contentJson": { ... }
+  "contentJson": { "type": "doc", "content": [] }
 }
 ```
 
 **Response:**
-- 200 with updated note
-- 404 if not found
+- `200` with updated note
+- `404` if not found
 
-#### DELETE /api/notes/:id
+---
 
-**Description:** Delete note.
+#### `DELETE /api/notes/:id`
+
+Delete a note.
 
 **Response:**
-- 204 on success
-- 404 if not found
+- `204` on success
+- `404` if not found
 
-#### POST /api/notes/:id/share
+---
 
-**Description:** Toggle public sharing.
+#### `POST /api/notes/:id/share`
+
+Toggle public sharing for a note.
 
 **Request body:**
+
 ```json
-{
-  "isPublic": true
-}
+{ "isPublic": true }
 ```
 
 **Behavior:**
-- If `isPublic = true` and note has no `public_slug`, generate new slug (`nanoid()`)
-- If `isPublic = false`, set `is_public = 0` and `public_slug = NULL`
+- If `isPublic = true` and note has no `public_slug`, generate a new slug via `nanoid()`
+- If `isPublic = false`, set `is_public = 0` and clear `public_slug`
 
 **Response 200:**
+
 ```json
 {
   "id": "note-id",
@@ -413,78 +447,66 @@ Optionally omit `contentJson` for list for performance.
 
 ### 7.3 Public Note Endpoint
 
-#### GET /api/public-notes/:slug
+#### `GET /api/public-notes/:slug`
 
-**Description:** Read-only access to public notes.
+Read-only access for unauthenticated users.
 
 **Response 200:**
+
 ```json
 {
   "title": "Public note",
-  "contentJson": { ... }
+  "contentJson": { "type": "doc", "content": [] }
 }
 ```
 
-- 404 if slug not found or `is_public = 0`
+- `404` if slug not found or `is_public = 0`
 
-(Or skip this API and just resolve directly in the `/p/[slug]` route using server components.)
+> Alternatively, resolve directly in the `/p/[slug]` server component, skipping this API route.
+
+---
 
 ## 8. Frontend – Pages & Components
 
 ### 8.1 Routes
 
-Assuming Next.js App Router structure:
-
-- `/` – Landing page
-  - Marketing / "Log in / Sign up" CTA
-- `/dashboard` – Authenticated area
-  - List of user notes
-  - "Create note" button
-- `/notes/[id]` – Authenticated note editor page
-  - TipTap editor
-  - Title field
-  - Share toggle
-  - Delete button
-- `/p/[slug]` – Public note page
-  - Read-only content
-  - No nav to user-specific area if viewer is unauthenticated
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page with login/sign up CTA |
+| `/dashboard` | Authenticated note list + "Create note" button |
+| `/notes/[id]` | Note editor (TipTap, title, share toggle, delete) |
+| `/p/[slug]` | Public read-only note view |
 
 ### 8.2 Layout & Navigation
 
-- Global layout: `app/layout.tsx`
-  - Header with app name, login/logout/account & theme
-- `app/(auth)/login`, `app/(auth)/register` (if better-auth doesn't provide their own UI)
+- `app/layout.tsx` — global layout with header (app name, login/logout, theme toggle)
+- `app/(auth)/login` and `app/(auth)/register` — auth pages (if not provided by better-auth)
 
 ### 8.3 Components
 
-**components/NoteList.tsx**
+**`components/NoteList.tsx`**
 - Props: `notes: { id, title, updatedAt, isPublic }[]`
-- Renders list with links to `/notes/[id]`
+- Renders list of notes linking to `/notes/[id]`
 
-**components/NoteEditor.tsx**
-- TipTap-based editor
-- Controlled by parent (`onChange` updates state, eventual API call)
+**`components/NoteEditor.tsx`**
+- TipTap-based rich text editor
+- Controlled via `onChange` callback; parent manages state and API calls
 
-**components/ShareToggle.tsx**
-- Switch/checkbox for `isPublic`
-- Shows public URL when enabled
+**`components/ShareToggle.tsx`**
+- Toggle switch for `isPublic`
+- Shows copyable public URL when sharing is enabled
 
-**components/DeleteNoteButton.tsx**
-- Confirms and calls DELETE API
+**`components/DeleteNoteButton.tsx`**
+- Confirms then calls `DELETE /api/notes/:id`
 
-**components/PublicNoteViewer.tsx**
-- Render TipTap content in read-only mode (or use `EditorContent` with `editable: false`)
+**`components/PublicNoteViewer.tsx`**
+- Renders TipTap content in read-only mode using `EditorContent` with `editable: false`
+
+---
 
 ## 9. TipTap Integration
 
 ### 9.1 Extensions
-
-Enable at minimum:
-- `StarterKit` (with paragraphs, headings, bold, italic, bullet lists, horizontal rule, etc.)
-- `Code` (inline code)
-- `CodeBlockLowlight` or `CodeBlock` (for code snippets)
-
-**Example editor config:**
 
 ```typescript
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -498,66 +520,63 @@ const editor = useEditor({
       heading: { levels: [1, 2, 3] },
     }),
     Code,
-    CodeBlock
+    CodeBlock,
   ],
-  content: initialContentJson,  // TipTap JSON
+  content: initialContentJson,
   onUpdate: ({ editor }) => {
-    const json = editor.getJSON();
-    onChange(json);
+    onChange(editor.getJSON());
   },
 });
 ```
 
-Content is always stored in DB as `JSON.stringify(json)`; when loading, `JSON.parse` and pass as `content`.
+Content is stored in the DB as `JSON.stringify(json)` and loaded via `JSON.parse`.
 
-### 9.2 Toolbar
+### 9.2 Toolbar Buttons
 
-Buttons:
-- Bold, Italic
-- H1, H2, H3, paragraph
-- Bullet list
-- Inline code
-- Code block
-- Horizontal rule
+| Button | TipTap command |
+|--------|---------------|
+| Bold | `toggleBold()` |
+| Italic | `toggleItalic()` |
+| H1 / H2 / H3 | `toggleHeading({ level: n })` |
+| Paragraph | `setParagraph()` |
+| Bullet list | `toggleBulletList()` |
+| Inline code | `toggleCode()` |
+| Code block | `toggleCodeBlock()` |
+| Horizontal rule | `setHorizontalRule()` |
 
-Each button calls the relevant TipTap chain: `editor.chain().focus().toggleBold().run()` etc.
+Each calls `editor.chain().focus().<command>().run()`.
+
+---
 
 ## 10. Styling (TailwindCSS)
 
-- Configure Tailwind in `tailwind.config.ts`
-- Use a minimal design:
-  - Neutral background, card-like note container
-  - Utility classes on components
-- Consider a prose style for read-only content (using `@tailwindcss/typography`)
+- Configure in `tailwind.config.ts`
+- Minimal design: neutral background, card-style note containers, utility classes throughout
+- Use `@tailwindcss/typography` for prose styling on public read-only note pages
+
+---
 
 ## 11. Security Considerations
 
-**Auth enforcement**
-- All `/dashboard` and `/notes/[id]` routes check auth on server
-- API routes verify user and attach `userId` from session
+| Area | Approach |
+|------|----------|
+| **Auth enforcement** | `/dashboard` and `/notes/[id]` check session server-side; API routes return `401` if unauthenticated |
+| **Authorization** | Every note query filters by `user_id` |
+| **Public notes** | Slug generated with `nanoid()` (16+ chars) to prevent enumeration |
+| **XSS** | Content stored as TipTap JSON, not raw HTML; only TipTap's renderer used — no `dangerouslySetInnerHTML` with unsanitized data |
+| **Rate limiting** | Optional: per-IP or per-user limiting on API routes |
 
-**Authorization**
-- Every note query in the auth context filters by `user_id`
-
-**Public notes**
-- Slug should be sufficiently random to prevent guessing (e.g. 16+ chars)
-
-**XSS**
-- Primary data is TipTap JSON, not raw HTML
-- When rendering to HTML, only use TipTap's rendering (no arbitrary `dangerouslySetInnerHTML` with unsanitized data)
-
-**Rate limiting (optional enhancement)**
-- Apply per-IP or per-user rate limiting to API routes if exposed publicly
+---
 
 ## 12. Development Workflow
 
 1. Initialize Next.js app with Bun & TypeScript
 2. Set up TailwindCSS
-3. Integrate better-auth and session handling
-4. Implement SQLite DB initialization and migrations (e.g. via a `scripts/init-db.ts` or manual `.sql`)
-5. Build DB helpers and note repository
-6. Implement `/api/notes` and sharing APIs
+3. Integrate better-auth and run `npx auth@latest migrate` to create auth tables
+4. Implement SQLite DB initialization for the `notes` table (e.g. `scripts/init-db.ts`)
+5. Build DB helpers and note repository (`lib/db.ts`, `lib/notes.ts`)
+6. Implement `/api/notes` and sharing API routes
 7. Build dashboard and note editor pages
 8. Integrate TipTap editor and toolbar
-9. Implement public note pages `/p/[slug]`
-10. Add polish (loading states, toast messages, error handling)
+9. Implement public note pages (`/p/[slug]`)
+10. Add polish: loading states, toast notifications, error handling
