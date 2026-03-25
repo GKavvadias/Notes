@@ -24,7 +24,8 @@
       "mcp__plugin_playwright_playwright__browser_close",
       "Bash(bun run:*)",
       "mcp__ide__getDiagnostics",
-      "mcp__ide__executeCode"
+      "mcp__ide__executeCode",
+      "WebFetch(domain:better-auth.com)"
     ]
   },
   "sandbox": {

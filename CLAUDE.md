@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+We are building the app described in @SPEC.MD. Read the file for general architectural tasks or to double-check the exact database structure, tech stack or application architecture.
+
+Keep your replies extremely concise and focus on conveying the key information. No unnecessary fluff, no long code snippets.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
@@ -14,6 +18,7 @@ bun lint       # Run ESLint
 ## Environment Setup
 
 Copy `.env.example` to `.env.local` and fill in:
+
 - `BETTER_AUTH_SECRET` – must be 32+ characters
 - `DB_PATH` – path to SQLite file (e.g. `data/app.db`)
 
