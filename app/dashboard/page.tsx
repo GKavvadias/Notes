@@ -2,10 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/Header";
+import { getNotesByUser } from "@/lib/notes";
+import { NotesList } from "@/components/NotesList";
 
 export default async function DashboardPage(): Promise<React.ReactElement> {
   const session = await getSession();
   if (!session) redirect("/authenticate");
+
+  const notes = getNotesByUser(session.user.id);
 
   return (
     <main className="min-h-screen bg-background">
@@ -22,6 +26,8 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
             New Note
           </Link>
         </div>
+
+        <NotesList notes={notes} />
       </div>
     </main>
   );

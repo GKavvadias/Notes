@@ -1,4 +1,4 @@
-import { get, run } from "./db";
+import { get, query, run } from "./db";
 
 export interface Note {
   id: string;
@@ -33,6 +33,28 @@ function rowToNote(row: NoteRow): Note {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+export function getNotesByUser(userId: string): Note[] {
+  const rows = query<NoteRow>(
+    "SELECT * FROM notes WHERE user_id = ? ORDER BY updated_at DESC",
+    [userId],
+  );
+  return rows.map(rowToNote);
+}
+
+export function deleteNotesByIds(ids: string[], userId: string): void {
+  if (ids.length === 0) return;
+  const placeholders = ids.map(() => "?").join(", ");
+  run(
+    `DELETE FROM notes WHERE id IN (${placeholders}) AND user_id = ?`,
+    [...ids, userId],
+  );
+}
+
+export function getNoteById(id: string, userId: string): Note | undefined {
+  const row = get<NoteRow>("SELECT * FROM notes WHERE id = ? AND user_id = ?", [id, userId]);
+  return row ? rowToNote(row) : undefined;
 }
 
 export function createNote(
