@@ -22,7 +22,6 @@ export function AuthForm({ mode }: AuthFormProps): React.ReactElement {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,17 +35,13 @@ export function AuthForm({ mode }: AuthFormProps): React.ReactElement {
     setPassword(e.target.value);
   }
 
-  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setName(e.target.value);
-  }
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
     const result = isRegister
-      ? await authClient.signUp.email({ email, password, name })
+      ? await authClient.signUp.email({ email, password, name: email })
       : await authClient.signIn.email({ email, password });
 
     if (result.error) {
@@ -76,24 +71,6 @@ export function AuthForm({ mode }: AuthFormProps): React.ReactElement {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {isRegister && (
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="name" className={labelClass}>
-                Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                autoComplete="name"
-                required
-                value={name}
-                onChange={handleNameChange}
-                className={inputClass}
-                placeholder="Your name"
-              />
-            </div>
-          )}
-
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className={labelClass}>
               Email
@@ -147,7 +124,7 @@ export function AuthForm({ mode }: AuthFormProps): React.ReactElement {
         <p className="mt-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
           <Link
             href={toggleHref}
-            className="underline underline-offset-2 hover:text-neutral-700 dark:hover:text-neutral-200"
+            className="hover:text-neutral-700 dark:hover:text-neutral-200"
           >
             {toggleLabel}
           </Link>
