@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite";
+import { Database, type SQLQueryBindings } from "bun:sqlite";
 import { mkdirSync } from "fs";
 import path from "path";
 
@@ -92,16 +92,16 @@ db.run(`CREATE INDEX IF NOT EXISTS idx_notes_is_public ON notes(is_public)`);
 
 // ── Query helpers ─────────────────────────────────────────────────────────────
 
-type SQLParams = unknown[] | Record<string, unknown>;
+type SQLParams = SQLQueryBindings[] | SQLQueryBindings;
 
 export function query<T>(sql: string, params?: SQLParams): T[] {
   if (!params || (Array.isArray(params) && params.length === 0)) {
     return db.query<T, []>(sql).all();
   }
   if (Array.isArray(params)) {
-    return db.query<T, unknown[]>(sql).all(...params);
+    return db.query<T, SQLQueryBindings[]>(sql).all(...params);
   }
-  return db.query<T, Record<string, unknown>>(sql).all(params);
+  return db.query<T, SQLQueryBindings>(sql).all(params);
 }
 
 export function get<T>(sql: string, params?: SQLParams): T | undefined {
@@ -109,9 +109,9 @@ export function get<T>(sql: string, params?: SQLParams): T | undefined {
     return db.query<T, []>(sql).get() ?? undefined;
   }
   if (Array.isArray(params)) {
-    return db.query<T, unknown[]>(sql).get(...params) ?? undefined;
+    return db.query<T, SQLQueryBindings[]>(sql).get(...params) ?? undefined;
   }
-  return db.query<T, Record<string, unknown>>(sql).get(params) ?? undefined;
+  return db.query<T, SQLQueryBindings>(sql).get(params) ?? undefined;
 }
 
 export function run(sql: string, params?: SQLParams): void {
@@ -120,8 +120,8 @@ export function run(sql: string, params?: SQLParams): void {
     return;
   }
   if (Array.isArray(params)) {
-    db.query<unknown, unknown[]>(sql).run(...params);
+    db.query<unknown, SQLQueryBindings[]>(sql).run(...params);
     return;
   }
-  db.query<unknown, Record<string, unknown>>(sql).run(params);
+  db.query<unknown, SQLQueryBindings>(sql).run(params);
 }
