@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { get, query, run } from "./db";
 
 export interface Note {
@@ -55,6 +56,28 @@ export function deleteNotesByIds(ids: string[], userId: string): void {
 export function getNoteById(id: string, userId: string): Note | undefined {
   const row = get<NoteRow>("SELECT * FROM notes WHERE id = ? AND user_id = ?", [id, userId]);
   return row ? rowToNote(row) : undefined;
+}
+
+export function getNoteBySlug(slug: string): Note | undefined {
+  const row = get<NoteRow>(
+    "SELECT * FROM notes WHERE public_slug = ? AND is_public = 1",
+    [slug],
+  );
+  return row ? rowToNote(row) : undefined;
+}
+
+export function toggleNoteSharing(
+  id: string,
+  userId: string,
+  isPublic: boolean,
+): Note | undefined {
+  const slug = isPublic ? nanoid(10) : null;
+  const now = new Date().toISOString();
+  run(
+    "UPDATE notes SET is_public = ?, public_slug = ?, updated_at = ? WHERE id = ? AND user_id = ?",
+    [isPublic ? 1 : 0, slug, now, id, userId],
+  );
+  return getNoteById(id, userId);
 }
 
 export function deleteNoteById(id: string, userId: string): void {

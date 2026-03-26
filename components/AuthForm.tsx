@@ -19,7 +19,6 @@ const labelClass =
 
 export function AuthForm({ mode }: AuthFormProps): React.ReactElement {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

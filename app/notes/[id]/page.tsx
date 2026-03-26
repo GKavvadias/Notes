@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { getNoteById } from "@/lib/notes";
-import { EditNoteForm } from "@/components/EditNoteForm";
+import { NoteRenderer } from "@/components/NoteRenderer";
 
 export default async function NotePage({
   params,
@@ -20,10 +20,15 @@ export default async function NotePage({
     <main className="min-h-screen bg-background">
       <Header email={session.user.email} />
       <div className="mx-auto max-w-3xl p-6">
-        <h1 className="mb-6 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Edit Note
-        </h1>
-        <EditNoteForm note={note} />
+        <div className="mb-8 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            {note.title}
+          </h1>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${note.isPublic ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" : "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"}`}>
+            {note.isPublic ? "Public" : "Private"}
+          </span>
+        </div>
+        <NoteRenderer contentJson={note.contentJson} />
       </div>
     </main>
   );

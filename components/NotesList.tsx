@@ -14,9 +14,14 @@ interface ConfirmDialogProps {
 
 function ConfirmDialog({ message, onConfirm, onCancel, loading }: ConfirmDialogProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
-      <div className="relative z-10 w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-xl dark:border-neutral-700 dark:bg-neutral-900"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="mb-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
           Delete note{message.includes("notes") ? "s" : ""}?
         </h2>
@@ -32,6 +37,7 @@ function ConfirmDialog({ message, onConfirm, onCancel, loading }: ConfirmDialogP
           <button
             onClick={onConfirm}
             disabled={loading}
+            data-testid="confirm-delete-btn"
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
           >
             {loading ? "Deleting…" : "Delete"}
@@ -187,13 +193,18 @@ export function NotesList({ notes }: { notes: Note[] }) {
               key={note.id}
               className="flex flex-col rounded-lg border border-neutral-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900"
             >
-              <Link href={`/notes/${note.id}`} className="mb-1 truncate font-medium text-neutral-900 dark:text-neutral-100">
-                {note.title}
-              </Link>
+              <div className="mb-1 flex items-center gap-2">
+                <Link href={`/notes/${note.id}`} className="truncate font-medium text-neutral-900 dark:text-neutral-100">
+                  {note.title}
+                </Link>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${note.isPublic ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" : "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"}`}>
+                  {note.isPublic ? "Public" : "Private"}
+                </span>
+              </div>
               <p className="mb-3 text-xs text-neutral-500">{formatDate(note.updatedAt)}</p>
               <div className="mt-auto flex gap-2">
                 <Link
-                  href={`/notes/${note.id}`}
+                  href={`/notes/${note.id}/edit`}
                   className="rounded-md border border-neutral-300 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-800"
                 >
                   Edit

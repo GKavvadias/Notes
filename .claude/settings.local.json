@@ -1,6 +1,5 @@
 {
   "permissions": {
-    "defaultMode": "acceptEdits",
     "allow": [
       "Bash(tree:*)",
       "Bash(ls:*)",
@@ -26,8 +25,13 @@
       "Bash(bun run:*)",
       "mcp__ide__getDiagnostics",
       "mcp__ide__executeCode",
-      "WebFetch(domain:better-auth.com)"
-    ]
+      "WebFetch(domain:better-auth.com)",
+      "Bash(bunx playwright:*)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true
   },
   "sandbox": {
     "enabled": true,
