@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { getNoteById } from "@/lib/notes";
 import { EditNoteForm } from "@/components/EditNoteForm";
 
-export default async function NotePage({
+export default async function EditNotePage({
   params,
 }: {
   params: Promise<{ id: string }>;

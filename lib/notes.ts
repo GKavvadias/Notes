@@ -57,6 +57,23 @@ export function getNoteById(id: string, userId: string): Note | undefined {
   return row ? rowToNote(row) : undefined;
 }
 
+export function deleteNoteById(id: string, userId: string): void {
+  run("DELETE FROM notes WHERE id = ? AND user_id = ?", [id, userId]);
+}
+
+export function updateNote(
+  id: string,
+  userId: string,
+  data: { title: string; contentJson: string },
+): Note | undefined {
+  const now = new Date().toISOString();
+  run(
+    "UPDATE notes SET title = ?, content_json = ?, updated_at = ? WHERE id = ? AND user_id = ?",
+    [data.title, data.contentJson, now, id, userId],
+  );
+  return getNoteById(id, userId);
+}
+
 export function createNote(
   userId: string,
   data: { title: string; contentJson: string },
