@@ -12,7 +12,7 @@ export function Header({ email }: HeaderProps): React.ReactElement {
         href="/dashboard"
         className="text-sm font-semibold tracking-tight text-neutral-900 hover:opacity-75 dark:text-neutral-100"
       >
-        Notes
+        Dashboard
       </Link>
       <div className="flex items-center gap-3">
         <span className="text-sm text-neutral-500 dark:text-neutral-400">
